@@ -8,5 +8,6 @@ using namespace std;
 
 int main()
 {
+    plugin::PluginSource("");
     return 0;
 }
