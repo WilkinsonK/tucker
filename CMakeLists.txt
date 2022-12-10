@@ -22,18 +22,22 @@ FetchContent_Declare(
     GIT_TAG v2.9)
 FetchContent_MakeAvailable(argparse)
 
-add_library(coreLib "")
+add_library(pluginLib "")
 add_subdirectory(src/plugin)
 
-target_sources(coreLib
+target_sources(pluginLib
     PRIVATE
-        src/plugin/plugin.cpp
+        src/plugin/metadata.cpp
+        src/plugin/metadata.hpp
+        src/plugin/object.hpp
+        src/plugin/source.cpp
+        src/plugin/source.hpp
     PUBLIC
         src/plugin/plugin.hpp)
 
-target_compile_definitions(coreLib PUBLIC)
-target_include_directories(coreLib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_compile_definitions(pluginLib PUBLIC)
+target_include_directories(pluginLib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 # Build and linkages for project.
 add_executable(${TUCKER_META_NAME} src/main.cpp)
-target_link_libraries(${TUCKER_META_NAME} argparse)
+target_link_libraries(${TUCKER_META_NAME} argparse pluginLib)

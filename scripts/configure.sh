@@ -44,7 +44,7 @@ if [[ ! $(which cmake) ]]; then
     exit 1
 fi
 
-vercomp $(cmake --version | cut -d' ' -f3 | head -n1) '3.25.0'
+vercomp $(cmake --version | cut -d' ' -f3 | head -n1) '3.24.0'
 if [[ $? = 2 ]]; then
     echo "error: using incompatible cmake install. expected >=3.25.0"
     exit 1
