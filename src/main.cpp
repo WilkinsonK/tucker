@@ -8,6 +8,6 @@ using namespace std;
 
 int main()
 {
-    plugin::PluginSource("");
+    plugin::PluginMeta testPluginMeta("test", "0.0.0", "0.0.0");
     return 0;
 }

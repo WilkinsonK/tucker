@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
+set(CMAKE_CXX_STANDARD 17)
 
 # Modules and meta-information for Tucker.
 include(FetchContent)
@@ -21,7 +22,18 @@ FetchContent_Declare(
     GIT_TAG v2.9)
 FetchContent_MakeAvailable(argparse)
 
+add_library(coreLib "")
+add_subdirectory(src/plugin)
+
+target_sources(coreLib
+    PRIVATE
+        src/plugin/plugin.cpp
+    PUBLIC
+        src/plugin/plugin.hpp)
+
+target_compile_definitions(coreLib PUBLIC)
+target_include_directories(coreLib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+
 # Build and linkages for project.
 add_executable(${TUCKER_META_NAME} src/main.cpp)
 target_link_libraries(${TUCKER_META_NAME} argparse)
-include_directories(src/plugin)

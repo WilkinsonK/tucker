@@ -1,177 +1,124 @@
-#include <vector>
 #include <string>
 #include <filesystem>
 #include <iostream>
 
 #include <dlfcn.h>
 
-#include "tucker/plugin/plugin.hpp"
+#include "src/plugin/plugin.hpp"
 
 using namespace std;
 
 namespace plugin
 {
-    class PluginMeta
-    {
-        public:
-            PluginMeta(
-                std::string pname,
+    PluginMeta::PluginMeta(
+                std::string pluginName,
                 std::string pluginVersion,
-                std::string tuckerVersion)
+                std::string tuckerVersion) 
             {
-                name = pname;
+                name = pluginName;
                 plugin_version = pluginVersion;
                 tucker_version = tuckerVersion;
             }
 
-            std::string name;
-            std::string plugin_version;
-            std::string tucker_version;
-    };
-
-    // Interface for plugins loaded by
-    // `Plugin Source`.
-    class PluginObject {
-        public:
-            // Load this plugin.
-            virtual void load();
-
-            // Destroy this plugin.
-            virtual void destroy();
-
-            std::string name;
-            std::string version;
-            std::string tuckerVersion;
-    };
-
-    // Manages metadata and handling of loading
-    // and destroying a target plugin.
-    class PluginSource
+    PluginSource::PluginSource(std::filesystem::path sourceFile)
     {
-        public:
-            PluginSource(std::filesystem::path sourceFile)
-            {
-                m_source_file = sourceFile;
-                m_plugin_loaded = false;
-            }
+        m_source_file = sourceFile;
+        m_plugin_loaded = false;
+    }
 
-            // Load the target plugin. Including
-            // all assets and metadata.
-            void plug()
-            {
-                m_loadPluginObject();
-                if (!m_plugin_metadata) {
-                    m_loadPluginMetaData();
-                }
+    void PluginSource::plug()
+    {
+        m_loadPluginObject();
+        if (!m_plugin_metadata) {
+            m_loadPluginMetaData();
+        }
 
-                m_plugin_loaded = true;
-            }
+        m_plugin_loaded = true;
+    }
 
-            // Destroy the target plugin.
-            //Including all assets and metadata.
-            void unplug()
-            {
-                if (!m_plugin_loaded) { return; }
-                m_destroyPluginObject();
-                m_plugin_loaded = false;
-            }
+    // Destroy the target plugin.
+    //Including all assets and metadata.
+    void PluginSource::unplug()
+    {
+        if (!m_plugin_loaded) { return; }
+        m_destroyPluginObject();
+        m_plugin_loaded = false;
+    }
 
-            // Get the release version of this
-            // plugin.
-            string getVersion()
-            {
-                return m_plugin_metadata->plugin_version;
-            }
+    std::string PluginSource::getVersion()
+    {
+        return m_plugin_metadata->plugin_version;
+    }
 
-            // Get the name of the plugin.
-            string getName()
-            {
-                return m_plugin_metadata->name;
-            }
+    std::string PluginSource::getName()
+    {
+        return m_plugin_metadata->name;
+    }
 
-            // Get version of Tucker Plugin API
-            // this plugin is compatible with.
-            string getAPIVersion()
-            {
-                return m_plugin_metadata->tucker_version;
-            }
+    std::string PluginSource::getAPIVersion()
+    {
+        return m_plugin_metadata->tucker_version;
+    }
 
-        protected:
-            // Shared object file which holds
-            // expected plugin behaviors.
-            std::filesystem::path m_source_file;
+    void PluginSource::m_loadPluginMetaData()
+    {
+        // This may, more or less, be
+        // redundant. What is the
+        // justification for moving this
+        // information to another object?
+        if (!m_plugin_object) { return; }
+        
+        PluginMeta plugin_meta(
+            m_plugin_object->name,
+            m_plugin_object->version,
+            m_plugin_object->tuckerVersion);
+        m_plugin_metadata = &plugin_meta;
+    }
 
-            // Internal plugin from this source.
-            PluginObject * m_plugin;
+    void PluginSource::m_loadPluginObject()
+    {
+        void* pluginHandle = dlopen(m_source_file.c_str(), RTLD_LAZY);
+        if (!pluginHandle)
+        {
+            // panik
+            std::cerr
+                << "failed to load plugin from: "
+                << m_source_file.c_str()
+                << endl;
+            return;
+        }
 
-            void * m_plugin_handle;
+        PluginObject (*Plugin)() =
+            (PluginObject (*)())dlsym(pluginHandle, "Plugin");
 
-            // Relevant data related to the
-            // plugin.
-            PluginMeta * m_plugin_metadata;
+        if (!Plugin)
+        {
+            // panik
+            std::cerr
+                << "failed to retrieve plugin from "
+                << "loaded object."
+                << endl;
+            return;
+        }
 
-            // Whether or not the plugin, and all
-            // assets loaded sucessfully.
-            bool m_plugin_loaded;
+        PluginObject plugin_object = Plugin();
 
-            void m_loadPluginMetaData()
-            {
-                // This may, more or less, be
-                // redundant. What is the
-                // justification for moving this
-                // information to another object?
-                if (!m_plugin) { return; }
-                
-                m_plugin_metadata = &PluginMeta(
-                    m_plugin->name,
-                    m_plugin->version,
-                    m_plugin->tuckerVersion);
-            }
+        // kalm
+        m_plugin_object = &plugin_object;
+        m_plugin_object->load();
+        m_plugin_handle = pluginHandle;
+    }
 
-            void m_loadPluginObject()
-            {
-                void* pluginHandle = dlopen(m_source_file.c_str(), RTLD_LAZY);
-                if (!handle)
-                {
-                    // panik
-                    std::cerr
-                        << "failed to load plugin from: "
-                        << m_source_file.c_str()
-                        << endl;
-                    return;
-                }
+    void PluginSource::m_destroyPluginObject()
+        {
+            PluginObject * plugin_object = m_plugin_object;
+            void * pluginHandle = m_plugin_handle;
 
-                PluginObject (*Plugin)() =
-                    (PluginObject (*)())dlsym(pluginHandle, "Plugin");
+            m_plugin_object = nullptr;
+            m_plugin_handle = nullptr;
 
-                if (!Plugin)
-                {
-                    // panik
-                    std::cerr
-                        << "failed to retrieve plugin from "
-                        << "loaded object."
-                        << endl;
-                    return;
-                }
-
-                // kalm
-                m_plugin = &Plugin();
-                m_plugin->load();
-                m_plugin_handle = pluginHandle;
-            }
-
-            void m_destroyPluginObject()
-            {
-                PluginObject * plugin = m_plugin;
-                void * pluginHandle = m_plugin_handle;
-
-                m_plugin = nullptr;
-                m_plugin_handle = nullptr;
-
-                plugin->destroy();
-                dlclose(pluginHandle);
-                delete plugin;
-                delete pluginHandle;
-            }
-    };
+            plugin_object->destroy();
+            dlclose(pluginHandle);
+            delete plugin_object;
+        }
 } // namespace plugin
