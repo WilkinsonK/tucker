@@ -22,5 +22,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(argparse)
 
 # Build and linkages for project.
-add_executable(${TUCKER_META_NAME} tucker/main.cpp)
+add_executable(${TUCKER_META_NAME} src/main.cpp)
 target_link_libraries(${TUCKER_META_NAME} argparse)
+include_directories(src/plugin)
