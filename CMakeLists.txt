@@ -15,16 +15,22 @@ add_compile_definitions(TUCKER_META_NAME="${TUCKER_META_NAME}")
 add_compile_definitions(TUCKER_META_VERSION="${TUCKER_META_VERSION}")
 add_compile_definitions(TUCKER_EXEC_ROOT="${TUCKER_EXEC_ROOT}")
 
+list(APPEND execList)
+
 # Fetch argparse.
-FetchContent_Declare(
-    argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-    GIT_TAG v2.9)
-FetchContent_MakeAvailable(argparse)
+if(true)
+    FetchContent_Declare(
+        argparse
+        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+        GIT_TAG v2.9)
+    FetchContent_MakeAvailable(argparse)
+    list(APPEND execList argparse)
+endif()
 
 if(true)
     add_subdirectory(src/plugin)
     find_library(pluginLib src/plugin)
+    list(APPEND execList pluginLib)
 endif()
 
 # Build and linkages for project.

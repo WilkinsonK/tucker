@@ -2,11 +2,7 @@ add_library(pluginLib "")
 
 target_sources(pluginLib
     PRIVATE
-        metadata.cpp
-        metadata.hpp
-        object.hpp
-        source.cpp
-        source.hpp
+        plugin.cpp
     PUBLIC
         plugin.hpp)
 
