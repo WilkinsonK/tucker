@@ -1,0 +1,192 @@
+#!/bin/python3
+
+import argparse, os, pathlib
+
+# This path must be relative to ensure entire
+# project is transportable.
+PROJECT_ROOT = pathlib.Path()
+
+root_parser = argparse.ArgumentParser(
+    prog=pathlib.Path(__file__).name,
+    description="generate a simple module for this project.")
+
+root_parser.add_argument("module", type=str, help="module to create")
+root_parser.add_argument("-A", "--auto-include", action="store_true", default=False)
+root_parser.add_argument("-t", "--target-directory", type=str, default="src")
+
+
+def get_module_name(*, namespace: argparse.Namespace | None = None) -> str:
+    """
+    Retrieve the base module name to add to this
+    project.
+    """
+
+    if not namespace:
+        namespace = root_parser.parse_args()
+    return namespace.module
+
+
+def get_target_dir(*,
+    namespace: argparse.Namespace | None = None) -> pathlib.Path:
+    """
+    Retrieve the source path where the module
+    will be created.
+    """
+
+    if not namespace:
+        namespace = root_parser.parse_args()
+    return PROJECT_ROOT / namespace.target_directory
+
+
+def is_auto_include(*, namespace: argparse.Namespace | None = None) -> bool:
+    """
+    Whether or not this dependeny should be
+    included in the root project by default.
+    """
+
+    if not namespace:
+        namespace = root_parser.parse_args()
+    return namespace.auto_include
+
+
+LOCAL_LIB_ENTRY_TEMPLATE = (
+"""
+if({auto_include})
+    add_subdirectory({module_source})
+    find_library({module_name} {module_source})
+    list(APPEND tuckerLibList {module_name})
+endif()
+""").lstrip("\n")
+
+LOCAL_LIB_MODULE_TEMPLATE = (
+"""
+add_library({module_name} "")
+target_sources({module_name}
+    PRIVATE
+        {module_source_name}.cpp
+    PUBLIC
+        {module_source_name}.hpp)
+
+target_compile_definitions({module_name} PUBLIC)
+target_include_directories({module_name} PUBLIC ${{CMAKE_CURRENT_LIST_DIR}})
+""").lstrip("\n")
+
+LOCAL_LIB_MODULE_HEADER_TEMPLATE = (
+"""
+#ifndef {header_title}
+#define {header_title}
+
+namespace {module_name}
+{{}} // namespace {module_name}
+
+#endif // {header_title}
+""").lstrip("\n")
+
+LOCAL_LIB_MODULE_SOURCE_TEMPLATE = (
+"""
+#include "{module_name}.hpp"
+""").lstrip("\n")
+
+
+def render_entry(name: str, source: str, *, auto_include: bool = True):
+    """
+    Returns a render of a simple snippet that
+    includes a sub module at the top-level of
+    this project.
+    """
+
+    return LOCAL_LIB_ENTRY_TEMPLATE.format(
+        module_name=name,
+        module_source=source,
+        auto_include=str(auto_include).lower())
+
+
+def render_module(name: str, source_name: str):
+    """
+    Returns a render of the default, or initial,
+    configuration modules in this project are
+    given.
+    """
+
+    return LOCAL_LIB_MODULE_TEMPLATE.format(
+        module_name=name, module_source_name=source_name)
+
+
+def render_module_header(title: str, name):
+    """
+    Returns a render of the initial header file
+    of a module.
+    """
+
+    return LOCAL_LIB_MODULE_HEADER_TEMPLATE.format(
+        header_title=title,
+        module_name=name)
+
+
+def render_module_source(name: str):
+    """
+    Returns a render of the initial source file
+    of a module.
+    """
+
+    return LOCAL_LIB_MODULE_SOURCE_TEMPLATE.format(module_name=name)
+
+
+# 1. Make new module directory. Name same as
+# module name
+#
+# 2. Populate directory with initial header and
+# source file. Name same as module name.
+#
+# 3. Apply snippet to parent build file including
+# new module.
+def main():
+    base_name      = get_module_name()
+    path_to_module = get_target_dir() / base_name
+
+    if path_to_module.exists():
+        print(f"error: location '{path_to_module!s}' exists")
+        return 1
+
+    print(render_entry(f"Tucker_{base_name}_Lib", str(path_to_module)))
+
+    # Step 1 && 2
+    path_to_module.mkdir()
+
+    # Write header file.
+    (path_to_module / (base_name + ".hpp")).write_text(
+        render_module_header(
+            f"TUCKER_MODULE_{base_name.upper()}_H",
+            base_name))
+
+    # Write source file.
+    (path_to_module / (base_name + ".cpp")).write_text(
+        render_module_source(base_name))
+
+    # Write module file.
+    (path_to_module / "CMakeLists.txt").write_text(
+        render_module(f"Tucker_{base_name}_Lib", base_name))
+
+    with (PROJECT_ROOT / "CMakeLists.txt").open("r") as project_fd:
+        project_fd_lines = project_fd.readlines()
+
+    lineidx, startidx, stopidx = 0, None, None
+    while not (startidx and stopidx):
+        sentinel_line = project_fd_lines[lineidx]
+
+        if "mkmod" in sentinel_line:
+            if "END" in sentinel_line:
+                stopidx = lineidx
+                break
+
+            if "BEGIN" in sentinel_line:
+                startidx = lineidx
+        lineidx += 1
+
+    print(startidx, stopidx)
+
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())

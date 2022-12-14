@@ -15,7 +15,8 @@ add_compile_definitions(TUCKER_META_NAME="${TUCKER_META_NAME}")
 add_compile_definitions(TUCKER_META_VERSION="${TUCKER_META_VERSION}")
 add_compile_definitions(TUCKER_EXEC_ROOT="${TUCKER_EXEC_ROOT}")
 
-list(APPEND execList)
+list(APPEND tuckerLibList)
+
 
 # Fetch argparse.
 if(true)
@@ -24,15 +25,18 @@ if(true)
         GIT_REPOSITORY https://github.com/p-ranav/argparse.git
         GIT_TAG v2.9)
     FetchContent_MakeAvailable(argparse)
-    list(APPEND execList argparse)
+    list(APPEND tuckerLibList argparse)
 endif()
 
+# Include project local directories.
+# mkmod[BEGIN]
 if(true)
-    add_subdirectory(src/plugin)
-    find_library(pluginLib src/plugin)
-    list(APPEND execList pluginLib)
+    add_subdirectory(src/api)
+    find_library(tuckerAPIlib src/api)
+    list(APPEND tuckerLibList tuckerAPIlib)
 endif()
 
-# Build and linkages for project.
-add_executable(${TUCKER_META_NAME} src/main.cpp)
-target_link_libraries(${TUCKER_META_NAME} argparse pluginLib)
+# mkmod[END]
+
+# Include this project application.
+add_subdirectory(src/tucker)
