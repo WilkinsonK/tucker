@@ -1,11 +1,9 @@
-add_library(tuckerAPIlib "")
-
-target_sources(tuckerAPIlib
+add_library(Tucker_api_Lib "")
+target_sources(Tucker_api_Lib
     PRIVATE
         api.cpp
     PUBLIC
-        api.hpp
-)
+        api.hpp)
 
-target_compile_definitions(tuckerAPIlib PUBLIC)
-target_include_directories(tuckerAPIlib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_compile_definitions(Tucker_api_Lib PUBLIC)
+target_include_directories(Tucker_api_Lib PUBLIC ${CMAKE_CURRENT_LIST_DIR})

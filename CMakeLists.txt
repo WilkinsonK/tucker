@@ -17,7 +17,6 @@ add_compile_definitions(TUCKER_EXEC_ROOT="${TUCKER_EXEC_ROOT}")
 
 list(APPEND tuckerLibList)
 
-
 # Fetch argparse.
 if(true)
     FetchContent_Declare(
@@ -32,10 +31,9 @@ endif()
 # mkmod[BEGIN]
 if(true)
     add_subdirectory(src/api)
-    find_library(tuckerAPIlib src/api)
-    list(APPEND tuckerLibList tuckerAPIlib)
+    find_library(Tucker_api_Lib src/api)
+    list(APPEND tuckerLibList Tucker_api_Lib)
 endif()
-
 # mkmod[END]
 
 # Include this project application.

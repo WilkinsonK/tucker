@@ -1,6 +1,6 @@
 #!/bin/python3
 
-import argparse, os, pathlib
+import argparse, pathlib
 
 # This path must be relative to ensure entire
 # project is transportable.
@@ -132,6 +132,38 @@ def render_module_source(name: str):
     return LOCAL_LIB_MODULE_SOURCE_TEMPLATE.format(module_name=name)
 
 
+def find_mkmod_boundary():
+    """
+    Reads the top-level build file to identify
+    the section where local dependencies are
+    added.
+
+    Value returned is a tuple of 2 integers
+    representing the upper and lower indexed line
+    numbers.
+    """
+
+    idx, start, stop = 0, None, None
+
+    lines = ((PROJECT_ROOT / "CMakeLists.txt")
+        .read_text()
+        .splitlines(keepends=False))
+
+    while not (start and stop):
+        line = lines[idx]
+
+        if "mkmod" in line:
+            if "END" in line:
+                stop = idx
+
+            if "BEGIN" in line:
+                start = idx
+
+        idx += 1
+
+    return start, stop #type: ignore
+
+
 # 1. Make new module directory. Name same as
 # module name
 #
@@ -147,8 +179,6 @@ def main():
     if path_to_module.exists():
         print(f"error: location '{path_to_module!s}' exists")
         return 1
-
-    print(render_entry(f"Tucker_{base_name}_Lib", str(path_to_module)))
 
     # Step 1 && 2
     path_to_module.mkdir()
@@ -167,23 +197,16 @@ def main():
     (path_to_module / "CMakeLists.txt").write_text(
         render_module(f"Tucker_{base_name}_Lib", base_name))
 
-    with (PROJECT_ROOT / "CMakeLists.txt").open("r") as project_fd:
-        project_fd_lines = project_fd.readlines()
+    _, lower_bound = find_mkmod_boundary()
+    project_lines = ((PROJECT_ROOT / "CMakeLists.txt")
+        .read_text()
+        .splitlines(keepends=False))
+    entry_lines = (render_entry(f"Tucker_{base_name}_Lib", str(path_to_module))
+        .splitlines(keepends=False))
 
-    lineidx, startidx, stopidx = 0, None, None
-    while not (startidx and stopidx):
-        sentinel_line = project_fd_lines[lineidx]
-
-        if "mkmod" in sentinel_line:
-            if "END" in sentinel_line:
-                stopidx = lineidx
-                break
-
-            if "BEGIN" in sentinel_line:
-                startidx = lineidx
-        lineidx += 1
-
-    print(startidx, stopidx)
+    for _, line in sorted(list(enumerate(entry_lines)), reverse=True):
+        project_lines.insert(lower_bound, line)
+    (PROJECT_ROOT / "CMakeLists.txt").write_text("\n".join(project_lines))
 
     return 0
 
