@@ -1,6 +1,6 @@
 #include <string>
 
-#include "src/plugin/metadata.hpp"
+#include "metadata.hpp"
 
 using namespace std;
 

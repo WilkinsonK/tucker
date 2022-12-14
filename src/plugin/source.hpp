@@ -4,8 +4,8 @@
 #include <string>
 #include <filesystem>
 
-#include "src/plugin/metadata.hpp"
-#include "src/plugin/object.hpp"
+#include "metadata.hpp"
+#include "object.hpp"
 
 using namespace std;
 

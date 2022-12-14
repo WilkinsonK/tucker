@@ -4,7 +4,7 @@
 
 #include <dlfcn.h>
 
-#include "src/plugin/source.hpp"
+#include "source.hpp"
 
 using namespace std;
 

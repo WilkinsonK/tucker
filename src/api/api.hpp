@@ -1,7 +1,7 @@
-#ifndef TUCKER_PACKAGE_API
-#define TUCKER_PACKAGE_API
+#ifndef TUCKER_MODULE_API
+#define TUCKER_MODULE_API
 
 namespace api
 {}
 
-#endif // TUCKER_PACKAGE_API
+#endif // TUCKER_MODULE_API

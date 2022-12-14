@@ -22,21 +22,10 @@ FetchContent_Declare(
     GIT_TAG v2.9)
 FetchContent_MakeAvailable(argparse)
 
-add_library(pluginLib "")
-add_subdirectory(src/plugin)
-
-target_sources(pluginLib
-    PRIVATE
-        src/plugin/metadata.cpp
-        src/plugin/metadata.hpp
-        src/plugin/object.hpp
-        src/plugin/source.cpp
-        src/plugin/source.hpp
-    PUBLIC
-        src/plugin/plugin.hpp)
-
-target_compile_definitions(pluginLib PUBLIC)
-target_include_directories(pluginLib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+if(true)
+    add_subdirectory(src/plugin)
+    find_library(pluginLib src/plugin)
+endif()
 
 # Build and linkages for project.
 add_executable(${TUCKER_META_NAME} src/main.cpp)
