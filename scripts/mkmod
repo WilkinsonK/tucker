@@ -51,7 +51,8 @@ def is_auto_include(*, namespace: argparse.Namespace | None = None) -> bool:
 
 LOCAL_LIB_ENTRY_TEMPLATE = (
 """
-if({auto_include})
+set(TUCKER_USE_{module_name}_MODULE {auto_include})
+if(TUCKER_USE_{module_name}_MODULE)
     add_subdirectory({module_source})
     find_library({module_name} {module_source})
     list(APPEND tuckerLibList {module_name})
@@ -109,7 +110,7 @@ def render_module(name: str, source_name: str):
         module_name=name, module_source_name=source_name)
 
 
-def render_module_header(title: str, name):
+def render_module_header(name: str):
     """
     Returns a render of the initial header file
     of a module.
@@ -159,14 +160,47 @@ def find_mkmod_boundary():
     return start, stop #type: ignore
 
 
-# 1. Make new module directory. Name same as
-# module name
-#
-# 2. Populate directory with initial header and
-# source file. Name same as module name.
-#
-# 3. Apply snippet to parent build file including
-# new module.
+def create_initial_module(name: str, path: pathlib.Path):
+    """
+    Builds the minimum required files and
+    directory that are needed for a module in
+    this project.
+    """
+
+    # Step 1 && 2
+    path.mkdir()
+
+    # Write header file.
+    (path / (name + ".hpp")).write_text(render_module_header(name))
+
+    # Write source file.
+    (path / (name + ".cpp")).write_text(render_module_source(name))
+
+    # Write module file.
+    lib_name = f"Tucker_{name}_Lib"
+    (path / "CMakeLists.txt").write_text(render_module(lib_name, name))
+
+
+def insert_initial_entry(name: str, path: pathlib.Path):
+    """
+    Update the top-level `CMakeLists.txt` file to
+    include linkage to a module.
+    """
+
+    ubound, _ = find_mkmod_boundary()
+    parent_data = ((PROJECT_ROOT / "CMakeLists.txt")
+        .read_text()
+        .splitlines(keepends=False))
+
+    render_args = f"Tucker_{name}_Lib", str(path)
+    entry_data  = (render_entry(*render_args, auto_include=is_auto_include())
+        .splitlines(keepends=False))
+
+    for _, line in sorted(enumerate(entry_data), reverse=True):
+        parent_data.insert(ubound + 1, line)
+    (PROJECT_ROOT / "CMakeLists.txt").write_text("\n".join(parent_data))
+
+
 def main():
     base_name      = get_module_name()
     path_to_module = get_target_dir() / base_name
@@ -175,33 +209,8 @@ def main():
         print(f"error: location '{path_to_module!s}' exists")
         return 1
 
-    # Step 1 && 2
-    path_to_module.mkdir()
-
-    # Write header file.
-    (path_to_module / (base_name + ".hpp")).write_text(
-        render_module_header(
-            f"TUCKER_MODULE_{base_name.upper()}_H",
-            base_name))
-
-    # Write source file.
-    (path_to_module / (base_name + ".cpp")).write_text(
-        render_module_source(base_name))
-
-    # Write module file.
-    (path_to_module / "CMakeLists.txt").write_text(
-        render_module(f"Tucker_{base_name}_Lib", base_name))
-
-    upper_bound, _ = find_mkmod_boundary()
-    project_lines = ((PROJECT_ROOT / "CMakeLists.txt")
-        .read_text()
-        .splitlines(keepends=False))
-    entry_lines = (render_entry(f"Tucker_{base_name}_Lib", str(path_to_module))
-        .splitlines(keepends=False))
-
-    for _, line in sorted(enumerate(entry_lines), reverse=True):
-        project_lines.insert(upper_bound + 1, line)
-    (PROJECT_ROOT / "CMakeLists.txt").write_text("\n".join(project_lines))
+    create_initial_module(base_name, path_to_module)
+    insert_initial_entry(base_name, path_to_module)
 
     return 0
 
