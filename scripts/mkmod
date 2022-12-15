@@ -192,7 +192,7 @@ def main():
     (path_to_module / "CMakeLists.txt").write_text(
         render_module(f"Tucker_{base_name}_Lib", base_name))
 
-    _, lower_bound = find_mkmod_boundary()
+    upper_bound, _ = find_mkmod_boundary()
     project_lines = ((PROJECT_ROOT / "CMakeLists.txt")
         .read_text()
         .splitlines(keepends=False))
@@ -200,7 +200,7 @@ def main():
         .splitlines(keepends=False))
 
     for _, line in sorted(enumerate(entry_lines), reverse=True):
-        project_lines.insert(lower_bound, line)
+        project_lines.insert(upper_bound + 1, line)
     (PROJECT_ROOT / "CMakeLists.txt").write_text("\n".join(project_lines))
 
     return 0
