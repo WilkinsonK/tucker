@@ -15,6 +15,8 @@ add_compile_definitions(TUCKER_META_NAME="${TUCKER_META_NAME}")
 add_compile_definitions(TUCKER_META_VERSION="${TUCKER_META_VERSION}")
 add_compile_definitions(TUCKER_EXEC_ROOT="${TUCKER_EXEC_ROOT}")
 
+# This list is used to include all external
+# libraries needed for this project.
 list(APPEND tuckerLibList)
 
 # Fetch argparse.
