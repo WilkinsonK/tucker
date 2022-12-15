@@ -28,6 +28,7 @@ if(true)
         GIT_TAG v2.9)
     FetchContent_MakeAvailable(argparse)
     FetchContent_GetProperties(argparse)
+    list(APPEND tuckerLibList argparse)
 endif()
 
 # Include project local directories.
