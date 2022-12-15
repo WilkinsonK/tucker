@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -26,7 +27,7 @@ if(true)
         GIT_REPOSITORY https://github.com/p-ranav/argparse.git
         GIT_TAG v2.9)
     FetchContent_MakeAvailable(argparse)
-    list(APPEND tuckerLibList argparse)
+    FetchContent_GetProperties(argparse)
 endif()
 
 # Include project local directories.

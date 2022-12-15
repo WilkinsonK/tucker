@@ -73,13 +73,10 @@ target_include_directories({module_name} PUBLIC ${{CMAKE_CURRENT_LIST_DIR}})
 
 LOCAL_LIB_MODULE_HEADER_TEMPLATE = (
 """
-#ifndef {header_title}
-#define {header_title}
+#pragma once
 
 namespace {module_name}
 {{}} // namespace {module_name}
-
-#endif // {header_title}
 """).lstrip("\n")
 
 LOCAL_LIB_MODULE_SOURCE_TEMPLATE = (
@@ -118,9 +115,7 @@ def render_module_header(title: str, name):
     of a module.
     """
 
-    return LOCAL_LIB_MODULE_HEADER_TEMPLATE.format(
-        header_title=title,
-        module_name=name)
+    return LOCAL_LIB_MODULE_HEADER_TEMPLATE.format(module_name=name)
 
 
 def render_module_source(name: str):
