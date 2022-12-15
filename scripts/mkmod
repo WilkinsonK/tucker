@@ -204,7 +204,7 @@ def main():
     entry_lines = (render_entry(f"Tucker_{base_name}_Lib", str(path_to_module))
         .splitlines(keepends=False))
 
-    for _, line in sorted(list(enumerate(entry_lines)), reverse=True):
+    for _, line in sorted(enumerate(entry_lines), reverse=True):
         project_lines.insert(lower_bound, line)
     (PROJECT_ROOT / "CMakeLists.txt").write_text("\n".join(project_lines))
 
