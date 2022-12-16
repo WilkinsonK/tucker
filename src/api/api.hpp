@@ -1,7 +1,14 @@
-#ifndef TUCKER_MODULE_API_H
-#define TUCKER_MODULE_API_H
+#pragma once
+
+#include "cli.hpp"
 
 namespace api
-{} // namespace api
+{
+    // Initializes this module.
+    void init();
 
-#endif // TUCKER_MODULE_API_H
+    // Performs teardown tasks related to this
+    // module.
+    void stop();
+
+} // namespace api
