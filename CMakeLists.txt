@@ -32,21 +32,5 @@ if(TUCKER_USE_argparse_MODULE)
     list(APPEND tuckerLibList argparse)
 endif()
 
-# Include project local directories.
-# mkmod[BEGIN]
-set(TUCKER_USE_Tucker_cli_Lib_MODULE true)
-if(TUCKER_USE_Tucker_cli_Lib_MODULE)
-    add_subdirectory(src/cli)
-    find_library(Tucker_cli_Lib src/cli)
-    list(APPEND tuckerLibList Tucker_cli_Lib)
-endif()
-set(TUCKER_USE_Tucker_api_Lib_MODULE true)
-if(TUCKER_USE_Tucker_api_Lib_MODULE)
-    add_subdirectory(src/api)
-    find_library(Tucker_api_Lib src/api)
-    list(APPEND tuckerLibList Tucker_api_Lib)
-endif()
-# mkmod[END]
-
 # Include this project application.
 add_subdirectory(src/tucker)

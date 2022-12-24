@@ -1,11 +1,16 @@
-#include "api.hpp"
-#include "cli.hpp"
+#include <argparse/argparse.hpp>
 
-using namespace std;
+namespace tucker
+{
+    argparse::ArgumentParser root_parser("tucker");
+
+    void parseArgs(int argc, const char *const *argv)
+    {
+        root_parser.parse_args(argc, argv);
+    }
+} // namespace tucker
 
 int main(int argc, const char *const *argv)
 {
-    cli::init();
-    cli::parse(argc, argv);
     return 0;
 }
