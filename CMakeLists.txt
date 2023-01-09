@@ -1,36 +1,23 @@
 
 cmake_minimum_required(VERSION 3.24)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 
 # Modules and meta-information for Tucker.
-include(FetchContent)
-
 set(TUCKER_META_NAME tucker)
 set(TUCKER_META_VERSION 0.0.0)
 set(TUCKER_EXEC_ROOT $ENV{PWD})
 
+# This project uses vcpkg. We must then point to
+# the corresponding toolchain file used so CMake
+# can find dependencies.
+set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+
 # Setup initial project and project definitions.
 project(${TUCKER_META_NAME} VERSION ${TUCKER_META_VERSION})
 
-add_compile_definitions(TUCKER_META_NAME="${TUCKER_META_NAME}")
-add_compile_definitions(TUCKER_META_VERSION="${TUCKER_META_VERSION}")
-add_compile_definitions(TUCKER_EXEC_ROOT="${TUCKER_EXEC_ROOT}")
-
-# This list is used to include all external
-# libraries needed for this project.
-list(APPEND tuckerLibList)
-
-# Fetch argparse.
-set(TUCKER_USE_argparse_MODULE true)
-if(TUCKER_USE_argparse_MODULE)
-    FetchContent_Declare(
-        argparse
-        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-        GIT_TAG v2.9)
-    FetchContent_MakeAvailable(argparse)
-    FetchContent_GetProperties(argparse)
-    list(APPEND tuckerLibList argparse)
-endif()
+# Include these packages for build.
+find_package(argparse CONFIG REQUIRED)
+find_package(restclient-cpp CONFIG REQUIRED)
 
 # Include this project application.
-add_subdirectory(src/tucker)
+add_subdirectory(src)
